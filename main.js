@@ -44,7 +44,8 @@
     let gameStarted = false;
     let gameOver = false;
     let gameSpeed = 0.2;
-    let spawnRate = 2000;
+let spawnRate = 2000;
+let spawnIntervals = [];
     const scoreDiv = document.getElementById("score");
     const startScreen = document.getElementById("start-screen");
     const gameOverScreen = document.getElementById("game-over-screen");
