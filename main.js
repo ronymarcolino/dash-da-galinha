@@ -40,7 +40,7 @@
 
     loader.load('low-poly-car.glb', function(gltf) {
       carModel = gltf.scene;
-      carModel.scale.set(0.5, 0.5, 0.5);
+      carModel.scale.set(2, 2, 2);
       carModel.traverse(function(node) {
         if (node.isMesh) { node.castShadow = true; }
       });
