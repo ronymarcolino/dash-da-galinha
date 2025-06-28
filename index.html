@@ -16,114 +16,36 @@
       background: rgba(0, 0, 0, 0.5);
       padding: 10px;
       border-radius: 8px;
+      z-index: 100;
+    }
+    #start-screen, #game-over-screen {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-family: monospace;
+      font-size: 48px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.7);
+      padding: 40px;
+      border-radius: 16px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
   <div id="score">Ovos: 0</div>
+  <div id="start-screen">
+    <h1>Galinha World Tour</h1>
+    <p>Clique para iniciar</p>
+  </div>
+  <div id="game-over-screen" style="display: none;">
+    <h1>Game Over</h1>
+    <p>Clique para reiniciar</p>
+  </div>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-  <script>
-    let scene = new THREE.Scene();
-    let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    let renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
-
-    // Luz
-    let light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 7.5);
-    scene.add(light);
-
-    let ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-
-    // Plano de fundo
-    let ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(100, 100),
-      new THREE.MeshBasicMaterial({color: 0x228B22})
-    );
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
-
-    // Galinha (modelo 3D .glb)
-    let galinha;
-    const loader = new THREE.GLTFLoader();
-    loader.load('chicken.glb', function(gltf) {
-      galinha = gltf.scene;
-      galinha.scale.set(0.5, 0.5, 0.5);
-      galinha.position.set(0, 0.5, 0);
-      scene.add(galinha);
-    });
-
-    // Variáveis do jogo
-    let ovos = [];
-    let obstaculos = [];
-    let score = 0;
-    const scoreDiv = document.getElementById("score");
-
-    // Função para criar ovos
-    function spawnOvo() {
-      let ovo = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 8, 8),
-        new THREE.MeshBasicMaterial({color: 0xFFFF00})
-      );
-      ovo.position.set(Math.random()*6 - 3, 0.3, -20);
-      scene.add(ovo);
-      ovos.push(ovo);
-    }
-
-    // Função para criar obstáculos
-    function spawnObstaculo() {
-      let obs = new THREE.Mesh(
-        new THREE.BoxGeometry(1, 1, 1),
-        new THREE.MeshBasicMaterial({color: 0x8B0000})
-      );
-      obs.position.set(Math.random()*6 - 3, 0.5, -20);
-      scene.add(obs);
-      obstaculos.push(obs);
-    }
-
-    // Movimento da galinha
-    document.addEventListener('keydown', e => {
-      if (!galinha) return;
-      if (e.key === 'ArrowLeft') galinha.position.x -= 1;
-      if (e.key === 'ArrowRight') galinha.position.x += 1;
-    });
-
-    camera.position.set(0, 5, 5);
-    camera.lookAt(0, 0, 0);
-
-    // Game loop
-    function animate() {
-      requestAnimationFrame(animate);
-
-      // Mover ovos e detectar coleta
-      ovos.forEach((ovo, index) => {
-        ovo.position.z += 0.2;
-        if (galinha && ovo.position.distanceTo(galinha.position) < 1) {
-          scene.remove(ovo);
-          ovos.splice(index, 1);
-          score++;
-          scoreDiv.innerText = `Ovos: ${score}`;
-        }
-      });
-
-      // Mover obstáculos e detectar colisão
-      obstaculos.forEach((obs, index) => {
-        obs.position.z += 0.2;
-        if (galinha && obs.position.distanceTo(galinha.position) < 1) {
-          alert('Game Over!');
-          location.reload();
-        }
-      });
-
-      renderer.render(scene, camera);
-    }
-
-    setInterval(spawnOvo, 2000);
-    setInterval(spawnObstaculo, 3000);
-    animate();
-  </script>
+  <script src="main.js"></script>
 </body>
 </html>
