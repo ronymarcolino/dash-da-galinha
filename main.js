@@ -25,7 +25,7 @@
     scene.add(ground);
 
     // Galinha (modelo 3D .glb)
-    let galinha;
+    let galinha, carModel;
     const loader = new THREE.GLTFLoader();
     loader.load('chicken.glb', function(gltf) {
       galinha = gltf.scene;
@@ -36,6 +36,14 @@
         if (node.isMesh) { node.castShadow = true; }
       });
       scene.add(galinha);
+    });
+
+    loader.load('low-poly-car.glb', function(gltf) {
+      carModel = gltf.scene;
+      carModel.scale.set(0.5, 0.5, 0.5);
+      carModel.traverse(function(node) {
+        if (node.isMesh) { node.castShadow = true; }
+      });
     });
 
     // Variáveis do jogo
@@ -65,12 +73,9 @@ let spawnIntervals = [];
 
     // Função para criar obstáculos
     function spawnObstaculo() {
-      let obs = new THREE.Mesh(
-        new THREE.BoxGeometry(1, 1, 1),
-        new THREE.MeshStandardMaterial({color: 0x8B0000, roughness: 0.8, metalness: 0.2})
-      );
-      obs.position.set(Math.random()*6 - 3, 0.5, -20);
-      obs.castShadow = true;
+      if (!carModel) return;
+      let obs = carModel.clone();
+      obs.position.set(Math.random()*6 - 3, 0.2, -20);
       scene.add(obs);
       obstaculos.push(obs);
     }
