@@ -29,8 +29,9 @@
     const loader = new THREE.GLTFLoader();
     loader.load('chicken.glb', function(gltf) {
       galinha = gltf.scene;
-      galinha.scale.set(0.5, 0.5, 0.5);
-      galinha.position.set(0, 0.5, 0);
+      galinha.scale.set(1, 1, 1);
+      galinha.position.set(0, 0.5, 2);
+      galinha.rotation.y = Math.PI / 2;
       galinha.traverse(function(node) {
         if (node.isMesh) { node.castShadow = true; }
       });
