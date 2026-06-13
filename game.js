@@ -275,19 +275,48 @@ class Game {
   // Simple particle effect for egg collection
   // -----------------------------------------------------------------
   createParticles(position) {
-    const particleGeom = new THREE.SphereGeometry(0.05, 8, 8);
-    const particleMat = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-    for (let i = 0; i < 20; i++) {
-      const p = new THREE.Mesh(particleGeom, particleMat);
+    const particleGeom = new THREE.SphereGeometry(0.08, 8, 8);
+    const particleMat = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 1 });
+    const particles = [];
+    
+    for (let i = 0; i < 30; i++) {
+      const p = new THREE.Mesh(particleGeom, particleMat.clone());
       p.position.copy(position);
       p.velocity = new THREE.Vector3(
-        (Math.random() - 0.5) * 2,
-        (Math.random() - 0.5) * 2,
-        (Math.random() - 0.5) * 2
+        (Math.random() - 0.5) * 0.5,
+        (Math.random() * 0.5) + 0.3,
+        (Math.random() - 0.5) * 0.5
       );
+      p.life = 1.0;
       this.scene.add(p);
-      setTimeout(() => this.scene.remove(p), 500);
+      particles.push(p);
     }
+    
+    const animateParticles = () => {
+      let stillAlive = false;
+      particles.forEach(p => {
+        if (p.life > 0) {
+          stillAlive = true;
+          p.position.add(p.velocity);
+          p.velocity.y -= 0.015;
+          p.life -= 0.02;
+          p.material.opacity = p.life;
+          p.scale.multiplyScalar(0.95);
+        }
+      });
+      
+      if (stillAlive) {
+        requestAnimationFrame(animateParticles);
+      } else {
+        particles.forEach(p => {
+          this.scene.remove(p);
+          p.geometry.dispose();
+          p.material.dispose();
+        });
+      }
+    };
+    
+    animateParticles();
   }
 }
 
