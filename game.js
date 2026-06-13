@@ -238,10 +238,10 @@ class Game {
     if (!this.gameStarted) return;
 
     const delta = this.clock.getDelta();
-    const move = this.gameSpeed * delta * 60; // normalise to 60fps base
+    const move = this.gameSpeed * delta * 60;
 
-    // Update eggs
-    this.eggs.forEach((egg, i) => {
+    for (let i = this.eggs.length - 1; i >= 0; i--) {
+      const egg = this.eggs[i];
       egg.position.z += move;
       if (this.chicken && egg.position.distanceTo(this.chicken.position) < 1) {
         this.createParticles(egg.position);
@@ -258,15 +258,15 @@ class Game {
           this.updateSpawners();
         }
       }
-    });
+    }
 
-    // Update obstacles
-    this.obstacles.forEach((obs, i) => {
+    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+      const obs = this.obstacles[i];
       obs.position.z += move;
       if (this.chicken && obs.position.distanceTo(this.chicken.position) < 1) {
         this.endGame();
       }
-    });
+    }
 
     this.renderer.render(this.scene, this.camera);
   };

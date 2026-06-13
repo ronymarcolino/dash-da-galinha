@@ -79,7 +79,7 @@ class Game {
     const onError = (err) => console.error('GLTF load error:', err);
 
     loader.load(
-      '/assets/chicken.glb',
+      '/chicken.glb',
       (gltf) => {
         this.chicken = gltf.scene;
         this.chicken.scale.set(1, 1, 1);
@@ -96,7 +96,7 @@ class Game {
     );
 
     loader.load(
-      '/assets/low-poly-car.glb',
+      '/low-poly-car.glb',
       (gltf) => {
         this.carPrototype = gltf.scene;
         this.carPrototype.scale.set(2, 2, 2);
@@ -118,8 +118,7 @@ class Game {
   }
 
   spawnEgg() {
-    const geometry = new THREE.SphereGeometry(0.2, 16, 16);
-    geometry.scale(1, 1.5, 1);
+    const geometry = new THREE.CapsuleGeometry(0.2, 0.2, 4, 8);
     const material = new THREE.MeshStandardMaterial({
       color: 0xffff00,
       roughness: 0.1,
@@ -208,7 +207,8 @@ class Game {
     const delta = this.clock.getDelta();
     const move = this.gameSpeed * delta * 60;
 
-    this.eggs.forEach((egg, i) => {
+    for (let i = this.eggs.length - 1; i >= 0; i--) {
+      const egg = this.eggs[i];
       egg.position.z += move;
       if (this.chicken && egg.position.distanceTo(this.chicken.position) < 1) {
         this.createParticles(egg.position);
@@ -225,14 +225,15 @@ class Game {
           this.updateSpawners();
         }
       }
-    });
+    }
 
-    this.obstacles.forEach((obs, i) => {
+    for (let i = this.obstacles.length - 1; i >= 0; i--) {
+      const obs = this.obstacles[i];
       obs.position.z += move;
       if (this.chicken && obs.position.distanceTo(this.chicken.position) < 1) {
         this.endGame();
       }
-    });
+    }
 
     this.renderer.render(this.scene, this.camera);
   };
