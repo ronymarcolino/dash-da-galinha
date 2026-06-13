@@ -233,11 +233,11 @@ class Game {
     document.addEventListener('keydown', (e) => {
       if (!this.chicken) return;
       const moveDistance = 1;
-      if (e.key === 'ArrowLeft') {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
         const newX = Math.max(this.roadLeft, this.chicken.position.x - moveDistance);
         this.chicken.position.x = newX;
       }
-      if (e.key === 'ArrowRight') {
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
         const newX = Math.min(this.roadRight, this.chicken.position.x + moveDistance);
         this.chicken.position.x = newX;
       }
