@@ -72,6 +72,30 @@ class Game {
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     this.scene.add(ground);
+
+    const road = new THREE.Mesh(
+      new THREE.PlaneGeometry(8, 100),
+      new THREE.MeshStandardMaterial({
+        color: 0x333333,
+        roughness: 0.9,
+        metalness: 0.1,
+      })
+    );
+    road.rotation.x = -Math.PI / 2;
+    road.position.z = -40;
+    road.receiveShadow = true;
+    this.scene.add(road);
+
+    const lineGeom = new THREE.PlaneGeometry(0.2, 100);
+    const lineMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const centerLine = new THREE.Mesh(lineGeom, lineMat);
+    centerLine.rotation.x = -Math.PI / 2;
+    centerLine.position.z = -40;
+    centerLine.position.y = 0.01;
+    this.scene.add(centerLine);
+
+    this.roadLeft = -3.5;
+    this.roadRight = 3.5;
   }
 
   loadModels() {
@@ -125,7 +149,7 @@ class Game {
       metalness: 0.5,
     });
     const egg = new THREE.Mesh(geometry, material);
-    egg.position.set(Math.random() * 6 - 3, 0.3, -20);
+    egg.position.set(Math.random() * (this.roadRight - this.roadLeft) + this.roadLeft, 0.3, -20);
     egg.castShadow = true;
     this.scene.add(egg);
     this.eggs.push(egg);
@@ -134,7 +158,7 @@ class Game {
   spawnObstacle() {
     if (!this.carPrototype) return;
     const obs = this.carPrototype.clone();
-    obs.position.set(Math.random() * 6 - 3, 0.2, -20);
+    obs.position.set(Math.random() * (this.roadRight - this.roadLeft) + this.roadLeft, 0.2, -20);
     this.scene.add(obs);
     this.obstacles.push(obs);
   }
@@ -142,8 +166,15 @@ class Game {
   bindEvents() {
     document.addEventListener('keydown', (e) => {
       if (!this.chicken) return;
-      if (e.key === 'ArrowLeft') this.chicken.position.x -= 1;
-      if (e.key === 'ArrowRight') this.chicken.position.x += 1;
+      const moveDistance = 1;
+      if (e.key === 'ArrowLeft') {
+        const newX = Math.max(this.roadLeft, this.chicken.position.x - moveDistance);
+        this.chicken.position.x = newX;
+      }
+      if (e.key === 'ArrowRight') {
+        const newX = Math.min(this.roadRight, this.chicken.position.x + moveDistance);
+        this.chicken.position.x = newX;
+      }
     });
 
     this.startScreen.addEventListener('click', () => this.startGame());
