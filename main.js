@@ -62,7 +62,7 @@ let spawnIntervals = [];
     // Função para criar ovos
     function spawnOvo() {
       let ovo = new THREE.Mesh(
-        new THREE.SphereGeometry(0.3, 16, 16),
+        new THREE.CapsuleGeometry(0.2, 0.2, 4, 8),
         new THREE.MeshStandardMaterial({color: 0xFFFF00, roughness: 0.1, metalness: 0.5})
       );
       ovo.position.set(Math.random()*6 - 3, 0.3, -20);

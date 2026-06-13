@@ -1,0 +1,70 @@
+/* ==== Design Tokens ==== */
+:root {
+  --bg-sky: hsl(197, 71%, 73%);         /* #87CEEB */
+  --ui-bg: hsla(0, 0%, 0%, 0.5);       /* dark glass */
+  --ui-fg: #fff;
+  --accent: hsl(45, 100%, 55%);         /* bright yellow for eggs */
+  --font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ==== Global ==== */
+html { font-size: clamp(14px, 1vw + 0.5rem, 18px); }
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg-sky);
+  font-family: var(--font-family);
+}
+
+/* Ensure canvas fills the viewport */
+canvas { display: block; width: 100vw; height: 100vh; }
+
+/* ==== UI Overlays ==== */
+#score, #start-screen, #game-over-screen {
+  position: absolute;
+  padding: 0.8rem 1.2rem;
+  border-radius: 0.8rem;
+  backdrop-filter: blur(8px);
+  background: var(--ui-bg);
+  color: var(--ui-fg);
+  font-size: 1.2rem;
+  line-height: 1.4;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+#score { top: 1rem; left: 1rem; }
+
+#start-screen, #game-over-screen {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  cursor: pointer;
+  padding: 2.5rem;
+}
+
+#start-screen h1, #game-over-screen h1 {
+  margin: 0 0 0.4rem;
+  font-size: 2rem;
+}
+
+#start-screen p, #game-over-screen p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Loading overlay */
+#loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--ui-fg);
+  font-family: var(--font-family);
+  font-size: 1.5rem;
+  z-index: 200;
+  background: var(--ui-bg);
+  padding: 1rem 2rem;
+  border-radius: 0.8rem;
+}
