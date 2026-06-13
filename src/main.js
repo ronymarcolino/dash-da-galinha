@@ -60,6 +60,43 @@ class Game {
     this.scene.add(ambLight);
   }
 
+  createTree(x, z) {
+    const treeGroup = new THREE.Group();
+
+    const trunkGeom = new THREE.CylinderGeometry(0.2, 0.3, 1, 8);
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 });
+    const trunk = new THREE.Mesh(trunkGeom, trunkMat);
+    trunk.position.y = 0.5;
+    trunk.castShadow = true;
+    treeGroup.add(trunk);
+
+    const leavesGeom = new THREE.ConeGeometry(1, 2, 8);
+    const leavesMat = new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.8 });
+    const leaves = new THREE.Mesh(leavesGeom, leavesMat);
+    leaves.position.y = 2;
+    leaves.castShadow = true;
+    treeGroup.add(leaves);
+
+    treeGroup.position.set(x, 0, z);
+    return treeGroup;
+  }
+
+  initTrees() {
+    const treePositions = [];
+    for (let i = 0; i < 20; i++) {
+      const side = Math.random() > 0.5 ? 1 : -1;
+      const x = side * (5 + Math.random() * 40);
+      const z = -Math.random() * 80;
+      treePositions.push({ x, z });
+    }
+
+    treePositions.forEach(pos => {
+      const tree = this.createTree(pos.x, pos.z);
+      this.scene.add(tree);
+      this.trees.push(tree);
+    });
+  }
+
   initGround() {
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(100, 100),
@@ -96,6 +133,9 @@ class Game {
 
     this.roadLeft = -3.5;
     this.roadRight = 3.5;
+
+    this.trees = [];
+    this.initTrees();
   }
 
   loadModels() {
@@ -237,6 +277,15 @@ class Game {
 
     const delta = this.clock.getDelta();
     const move = this.gameSpeed * delta * 60;
+
+    this.trees.forEach(tree => {
+      tree.position.z += move;
+      if (tree.position.z > 10) {
+        const side = Math.random() > 0.5 ? 1 : -1;
+        tree.position.x = side * (5 + Math.random() * 40);
+        tree.position.z = -80;
+      }
+    });
 
     for (let i = this.eggs.length - 1; i >= 0; i--) {
       const egg = this.eggs[i];
