@@ -54,6 +54,29 @@ canvas { display: block; width: 100vw; height: 100vh; }
   font-size: 1rem;
 }
 
+.instructions {
+  margin-top: 1.5rem;
+  text-align: left;
+  background: hsla(0, 0%, 0%, 0.3);
+  padding: 1rem;
+  border-radius: 0.5rem;
+}
+
+.instructions h2 {
+  margin: 0 0 0.8rem;
+  font-size: 1.3rem;
+  color: var(--accent);
+}
+
+.instructions p {
+  margin: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.instructions strong {
+  color: var(--accent);
+}
+
 /* Loading overlay */
 #loader {
   position: absolute;
