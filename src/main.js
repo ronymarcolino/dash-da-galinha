@@ -25,6 +25,9 @@ class Game {
     this.startScreen = document.getElementById('start-screen');
     this.gameOverScreen = document.getElementById('game-over-screen');
 
+    this.audioContext = null;
+    this.initAudio();
+
     this.initThree();
     this.initLights();
     this.initGround();
@@ -58,6 +61,71 @@ class Game {
 
     const ambLight = new THREE.AmbientLight(0xffffff, 0.5);
     this.scene.add(ambLight);
+  }
+
+  initAudio() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    this.audioContext = new AudioContext();
+  }
+
+  playCollectSound() {
+    if (!this.audioContext) return;
+    
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(800, this.audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(1200, this.audioContext.currentTime + 0.1);
+    
+    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.1);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.1);
+  }
+
+  playGameOverSound() {
+    if (!this.audioContext) return;
+    
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.type = 'sawtooth';
+    oscillator.frequency.setValueAtTime(300, this.audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(50, this.audioContext.currentTime + 0.5);
+    
+    gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.5);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.5);
+  }
+
+  playStartSound() {
+    if (!this.audioContext) return;
+    
+    const oscillator = this.audioContext.createOscillator();
+    const gainNode = this.audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(this.audioContext.destination);
+    
+    oscillator.type = 'square';
+    oscillator.frequency.setValueAtTime(400, this.audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(800, this.audioContext.currentTime + 0.2);
+    
+    gainNode.gain.setValueAtTime(0.2, this.audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.2);
+    
+    oscillator.start(this.audioContext.currentTime);
+    oscillator.stop(this.audioContext.currentTime + 0.2);
   }
 
   createTree(x, z) {
@@ -239,6 +307,7 @@ class Game {
     this.gameSpeed = this.CONFIG.initialSpeed;
     this.spawnRate = this.CONFIG.spawnRate;
     this.updateSpawners();
+    this.playStartSound();
     this.animate();
   }
 
@@ -246,6 +315,7 @@ class Game {
     this.gameOver = true;
     this.gameOverScreen.style.display = 'block';
     this.clearSpawners();
+    this.playGameOverSound();
   }
 
   updateScoreUI() {
@@ -295,6 +365,7 @@ class Game {
         this.scene.remove(egg);
         this.eggs.splice(i, 1);
         this.score++;
+        this.playCollectSound();
         this.updateScoreUI();
         if (this.score % 5 === 0) {
           this.gameSpeed += this.CONFIG.speedIncrement;
