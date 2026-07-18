@@ -389,7 +389,7 @@ class Game {
 
     const loader = new GLTFLoader(manager);
 
-    loader.load('/assets/chicken.glb', (gltf) => {
+    loader.load(`${import.meta.env.BASE_URL}assets/chicken.glb`, (gltf) => {
       this.chicken = gltf.scene;
       this.chicken.scale.set(1, 1, 1);
       this.chicken.position.set(0, 0.5, 2);
@@ -400,7 +400,7 @@ class Game {
       this.scene.add(this.chicken);
     });
 
-    loader.load('/assets/low-poly-car.glb', (gltf) => {
+    loader.load(`${import.meta.env.BASE_URL}assets/low-poly-car.glb`, (gltf) => {
       this.carPrototype = gltf.scene;
       this.carPrototype.scale.set(2, 2, 2);
       this.carPrototype.traverse((node) => {

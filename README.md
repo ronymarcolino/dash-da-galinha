@@ -66,6 +66,16 @@ docker-compose down
 
 The game will be available at `http://localhost:8080`.
 
+## Deploy (GitHub Pages)
+
+Every push to `main` triggers the [deploy workflow](.github/workflows/deploy.yml),
+which builds the game with the correct base path (`/<repo-name>/`) and publishes
+it to GitHub Pages at `https://ronymarcolino.github.io/dash-da-galinha/`.
+
+One-time setup: in the repository, go to **Settings → Pages** and set
+**Source** to **GitHub Actions**. The workflow can also be run manually from
+the Actions tab (`workflow_dispatch`).
+
 ## Controls
 
 - **Arrow Left / A** - Move left
