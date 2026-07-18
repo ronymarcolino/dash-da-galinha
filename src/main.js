@@ -6,9 +6,11 @@ class Game {
     this.CONFIG = {
       initialSpeed: 0.2,
       speedIncrement: 0.05,
+      maxSpeed: 0.6,
       spawnRate: 2000,
       minSpawnRate: 500,
       obstacleSpawnMultiplier: 1.5,
+      moveDistance: 1,
     };
 
     this.score = 0;
@@ -20,6 +22,20 @@ class Game {
     this.eggs = [];
     this.obstacles = [];
     this.clock = new THREE.Clock();
+    this.eggCollisionRadius = 1;
+    this.obstacleCollisionRadius = 1;
+
+    // Shared geometry/material reused by every egg instance (avoids per-spawn GPU allocations)
+    this.eggGeometry = new THREE.CapsuleGeometry(0.2, 0.2, 4, 8);
+    this.eggMaterial = new THREE.MeshStandardMaterial({
+      color: 0xffff00,
+      roughness: 0.1,
+      metalness: 0.5,
+    });
+
+    // Shared geometry reused by every particle burst (only the material is cloned, once per burst)
+    this.particleGeometry = new THREE.SphereGeometry(0.08, 8, 8);
+    this.particleMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true });
 
     this.scoreDiv = document.getElementById('score');
     this.startScreen = document.getElementById('start-screen');
@@ -46,7 +62,7 @@ class Game {
     );
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.shadowMap.enabled = true;
-    this.renderer.setPixelRatio(window.devicePixelRatio);
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(this.renderer.domElement);
     this.camera.position.set(0, 5, 5);
@@ -207,56 +223,49 @@ class Game {
   }
 
   loadModels() {
-    const loader = new GLTFLoader();
-    const onError = (err) => console.error('GLTF load error:', err);
+    const loaderEl = document.getElementById('loader');
+    const manager = new THREE.LoadingManager();
 
-    loader.load(
-      '/chicken.glb',
-      (gltf) => {
-        this.chicken = gltf.scene;
-        this.chicken.scale.set(1, 1, 1);
-        this.chicken.position.set(0, 0.5, 2);
-        this.chicken.rotation.y = Math.PI / 2;
-        this.chicken.traverse((node) => {
-          if (node.isMesh) node.castShadow = true;
-        });
-        this.scene.add(this.chicken);
-        this.checkAllModelsLoaded();
-      },
-      undefined,
-      onError
-    );
-
-    loader.load(
-      '/low-poly-car.glb',
-      (gltf) => {
-        this.carPrototype = gltf.scene;
-        this.carPrototype.scale.set(2, 2, 2);
-        this.carPrototype.traverse((node) => {
-          if (node.isMesh) node.castShadow = true;
-        });
-        this.checkAllModelsLoaded();
-      },
-      undefined,
-      onError
-    );
-  }
-
-  checkAllModelsLoaded() {
-    if (this.chicken && this.carPrototype) {
-      const loaderEl = document.getElementById('loader');
+    manager.onProgress = (url, loaded, total) => {
+      if (loaderEl && total) {
+        loaderEl.textContent = `Carregando... ${Math.round((loaded / total) * 100)}%`;
+      }
+    };
+    manager.onLoad = () => {
       if (loaderEl) loaderEl.style.display = 'none';
-    }
+    };
+    manager.onError = (url) => {
+      console.error('Falha ao carregar asset:', url);
+      if (loaderEl) loaderEl.textContent = 'Erro ao carregar o jogo. Recarregue a página.';
+    };
+
+    const loader = new GLTFLoader(manager);
+
+    loader.load('/assets/chicken.glb', (gltf) => {
+      this.chicken = gltf.scene;
+      this.chicken.scale.set(1, 1, 1);
+      this.chicken.position.set(0, 0.5, 2);
+      this.chicken.rotation.y = Math.PI / 2;
+      this.chicken.traverse((node) => {
+        if (node.isMesh) node.castShadow = true;
+      });
+      this.scene.add(this.chicken);
+    });
+
+    loader.load('/assets/low-poly-car.glb', (gltf) => {
+      this.carPrototype = gltf.scene;
+      this.carPrototype.scale.set(2, 2, 2);
+      this.carPrototype.traverse((node) => {
+        if (node.isMesh) node.castShadow = true;
+      });
+      const bounds = new THREE.Box3().setFromObject(this.carPrototype);
+      const size = bounds.getSize(new THREE.Vector3());
+      this.obstacleCollisionRadius = Math.max(size.x, size.z) / 2;
+    });
   }
 
   spawnEgg() {
-    const geometry = new THREE.CapsuleGeometry(0.2, 0.2, 4, 8);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xffff00,
-      roughness: 0.1,
-      metalness: 0.5,
-    });
-    const egg = new THREE.Mesh(geometry, material);
+    const egg = new THREE.Mesh(this.eggGeometry, this.eggMaterial);
     egg.position.set(Math.random() * (this.roadRight - this.roadLeft) + this.roadLeft, 0.3, -20);
     egg.castShadow = true;
     this.scene.add(egg);
@@ -271,19 +280,34 @@ class Game {
     this.obstacles.push(obs);
   }
 
+  moveLeft() {
+    if (!this.chicken) return;
+    this.chicken.position.x = Math.max(this.roadLeft, this.chicken.position.x - this.CONFIG.moveDistance);
+  }
+
+  moveRight() {
+    if (!this.chicken) return;
+    this.chicken.position.x = Math.min(this.roadRight, this.chicken.position.x + this.CONFIG.moveDistance);
+  }
+
   bindEvents() {
     document.addEventListener('keydown', (e) => {
-      if (!this.chicken) return;
-      const moveDistance = 1;
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-        const newX = Math.max(this.roadLeft, this.chicken.position.x - moveDistance);
-        this.chicken.position.x = newX;
-      }
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-        const newX = Math.min(this.roadRight, this.chicken.position.x + moveDistance);
-        this.chicken.position.x = newX;
-      }
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') this.moveLeft();
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') this.moveRight();
     });
+
+    const btnLeft = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+    btnLeft.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.moveLeft();
+    });
+    btnRight.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      this.moveRight();
+    });
+    btnLeft.addEventListener('click', () => this.moveLeft());
+    btnRight.addEventListener('click', () => this.moveRight());
 
     this.startScreen.addEventListener('click', () => this.startGame());
     this.gameOverScreen.addEventListener('click', () => location.reload());
@@ -313,15 +337,23 @@ class Game {
 
   endGame() {
     this.gameOver = true;
+    const high = Number(localStorage.getItem('highScore') || 0);
+    const finalScoreEl = document.getElementById('final-score');
+    finalScoreEl.textContent =
+      this.score >= high && this.score > 0
+        ? `Novo recorde: ${this.score} ovos!`
+        : `Você fez ${this.score} ovos (recorde: ${high})`;
     this.gameOverScreen.style.display = 'block';
     this.clearSpawners();
     this.playGameOverSound();
   }
 
   updateScoreUI() {
-    this.scoreDiv.innerText = `Ovos: ${this.score}`;
-    const high = Number(localStorage.getItem('highScore') || 0);
-    if (this.score > high) localStorage.setItem('highScore', this.score);
+    const high = Math.max(this.score, Number(localStorage.getItem('highScore') || 0));
+    if (this.score > Number(localStorage.getItem('highScore') || 0)) {
+      localStorage.setItem('highScore', this.score);
+    }
+    this.scoreDiv.innerText = `Ovos: ${this.score} | Recorde: ${high}`;
   }
 
   updateSpawners() {
@@ -360,7 +392,7 @@ class Game {
     for (let i = this.eggs.length - 1; i >= 0; i--) {
       const egg = this.eggs[i];
       egg.position.z += move;
-      if (this.chicken && egg.position.distanceTo(this.chicken.position) < 1) {
+      if (this.chicken && egg.position.distanceTo(this.chicken.position) < this.eggCollisionRadius) {
         this.createParticles(egg.position);
         this.scene.remove(egg);
         this.eggs.splice(i, 1);
@@ -368,7 +400,10 @@ class Game {
         this.playCollectSound();
         this.updateScoreUI();
         if (this.score % 5 === 0) {
-          this.gameSpeed += this.CONFIG.speedIncrement;
+          this.gameSpeed = Math.min(
+            this.CONFIG.maxSpeed,
+            this.gameSpeed + this.CONFIG.speedIncrement
+          );
           this.spawnRate = Math.max(
             this.CONFIG.minSpawnRate,
             this.spawnRate - 200
@@ -381,7 +416,7 @@ class Game {
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const obs = this.obstacles[i];
       obs.position.z += move;
-      if (this.chicken && obs.position.distanceTo(this.chicken.position) < 1) {
+      if (this.chicken && obs.position.distanceTo(this.chicken.position) < this.obstacleCollisionRadius) {
         this.endGame();
       }
     }
@@ -390,44 +425,38 @@ class Game {
   };
 
   createParticles(position) {
-    const particleGeom = new THREE.SphereGeometry(0.08, 8, 8);
-    const particleMat = new THREE.MeshBasicMaterial({ color: 0xffff00, transparent: true, opacity: 1 });
+    // One material per burst (not per particle) - all 30 particles in a burst fade in lockstep,
+    // so they can safely share it without visually interfering with other concurrent bursts.
+    const burstMaterial = this.particleMaterial.clone();
     const particles = [];
-    
+
     for (let i = 0; i < 30; i++) {
-      const p = new THREE.Mesh(particleGeom, particleMat.clone());
+      const p = new THREE.Mesh(this.particleGeometry, burstMaterial);
       p.position.copy(position);
       p.velocity = new THREE.Vector3(
         (Math.random() - 0.5) * 0.5,
         (Math.random() * 0.5) + 0.3,
         (Math.random() - 0.5) * 0.5
       );
-      p.life = 1.0;
       this.scene.add(p);
       particles.push(p);
     }
-    
+
+    let life = 1.0;
     const animateParticles = () => {
-      let stillAlive = false;
+      life -= 0.02;
+      burstMaterial.opacity = Math.max(0, life);
       particles.forEach(p => {
-        if (p.life > 0) {
-          stillAlive = true;
-          p.position.add(p.velocity);
-          p.velocity.y -= 0.015;
-          p.life -= 0.02;
-          p.material.opacity = p.life;
-          p.scale.multiplyScalar(0.95);
-        }
+        p.position.add(p.velocity);
+        p.velocity.y -= 0.015;
+        p.scale.multiplyScalar(0.95);
       });
-      
-      if (stillAlive) {
+
+      if (life > 0) {
         requestAnimationFrame(animateParticles);
       } else {
-        particles.forEach(p => {
-          this.scene.remove(p);
-          p.geometry.dispose();
-          p.material.dispose();
-        });
+        particles.forEach(p => this.scene.remove(p));
+        burstMaterial.dispose();
       }
     };
     
@@ -438,7 +467,7 @@ class Game {
 window.addEventListener('DOMContentLoaded', () => {
   const loader = document.createElement('div');
   loader.id = 'loader';
-  loader.textContent = 'Loading...';
+  loader.textContent = 'Carregando... 0%';
   document.body.appendChild(loader);
 
   new Game();

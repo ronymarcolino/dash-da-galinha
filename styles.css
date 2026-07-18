@@ -77,6 +77,38 @@ canvas { display: block; width: 100vw; height: 100vh; }
   color: var(--accent);
 }
 
+/* ==== Touch controls ==== */
+#touch-controls {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 100;
+  pointer-events: none;
+}
+
+#touch-controls button {
+  pointer-events: auto;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  border: none;
+  background: var(--ui-bg);
+  color: var(--ui-fg);
+  font-size: 1.5rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#touch-controls button:active {
+  background: hsla(0, 0%, 0%, 0.7);
+}
+
 /* Loading overlay */
 #loader {
   position: absolute;

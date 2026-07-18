@@ -68,11 +68,13 @@ The game will be available at `http://localhost:8080`.
 
 ## Controls
 
-- **Arrow Left** - Move left
-- **Arrow Right** - Move right
+- **Arrow Left / A** - Move left
+- **Arrow Right / D** - Move right
+- On touch devices, use the on-screen left/right buttons
 
 ## Gameplay
 
 - Collect yellow eggs to increase your score
 - Avoid cars - hitting one ends the game
-- Difficulty increases every 5 eggs collected
+- Difficulty increases every 5 eggs collected, up to a speed cap
+- Your best score is saved locally and shown in the HUD
