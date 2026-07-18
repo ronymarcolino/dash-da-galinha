@@ -66,13 +66,25 @@ docker-compose down
 
 The game will be available at `http://localhost:8080`.
 
+## Deploy (GitHub Pages)
+
+Every push to `main` triggers the [deploy workflow](.github/workflows/deploy.yml),
+which builds the game with the correct base path (`/<repo-name>/`) and publishes
+it to GitHub Pages at `https://ronymarcolino.github.io/dash-da-galinha/`.
+
+One-time setup: in the repository, go to **Settings → Pages** and set
+**Source** to **GitHub Actions**. The workflow can also be run manually from
+the Actions tab (`workflow_dispatch`).
+
 ## Controls
 
-- **Arrow Left** - Move left
-- **Arrow Right** - Move right
+- **Arrow Left / A** - Move left
+- **Arrow Right / D** - Move right
+- On touch devices, use the on-screen left/right buttons
 
 ## Gameplay
 
 - Collect yellow eggs to increase your score
 - Avoid cars - hitting one ends the game
-- Difficulty increases every 5 eggs collected
+- Difficulty increases every 5 eggs collected, up to a speed cap
+- Your best score is saved locally and shown in the HUD

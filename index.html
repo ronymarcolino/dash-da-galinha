@@ -5,23 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Dash da Galinha - Um jogo 3D endless runner feito com Three.js">
   <title>Dash da Galinha</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐔</text></svg>">
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div id="score">Ovos: 0</div>
+  <div id="score">🥚 0  |  🏆 0</div>
   <div id="start-screen">
-    <h1>Dash da Galinha</h1>
-    <p>Clique para iniciar</p>
+    <h1>🐔 Dash da Galinha</h1>
+    <p class="tap-hint">Clique para iniciar</p>
     <div class="instructions">
       <h2>Como Jogar</h2>
-      <p>Use <strong>← →</strong> ou <strong>A D</strong> para mover</p>
-      <p>Colete os <strong>ovos</strong> para ganhar pontos</p>
-      <p>Desvie dos <strong>carros</strong> para não perder!</p>
+      <p><kbd>←</kbd> <kbd>→</kbd> ou <kbd>A</kbd> <kbd>D</kbd> para mover</p>
+      <p>🥚 Colete os <strong>ovos</strong> para ganhar pontos</p>
+      <p>🚗 Desvie dos <strong>carros</strong> para não perder!</p>
     </div>
   </div>
   <div id="game-over-screen" style="display: none;">
-    <h1>Game Over</h1>
-    <p>Clique para reiniciar</p>
+    <h1>💥 Game Over</h1>
+    <p id="final-score"></p>
+    <p class="tap-hint">Clique para reiniciar</p>
+  </div>
+  <div id="touch-controls">
+    <button id="btn-left" aria-label="Mover para esquerda">◀</button>
+    <button id="btn-right" aria-label="Mover para direita">▶</button>
   </div>
   <script type="module" src="/src/main.js"></script>
 </body>
