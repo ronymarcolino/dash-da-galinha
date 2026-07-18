@@ -13,6 +13,8 @@ class Game {
       minSpawnRate: 500,
       obstacleSpawnMultiplier: 1.5,
       moveDistance: 1,
+      // Hitboxes are shrunk to this fraction of the visual bounds so grazing passes feel fair
+      hitboxForgiveness: 0.8,
     };
 
     this.score = 0;
@@ -30,7 +32,6 @@ class Game {
     this.targetX = 0;
     this.clock = new THREE.Clock();
     this.eggCollisionRadius = 1;
-    this.obstacleCollisionRadius = 1;
 
     // Shared geometry/material reused by every egg instance (avoids per-spawn GPU allocations)
     this.eggGeometry = new THREE.CapsuleGeometry(0.2, 0.2, 4, 8);
@@ -390,13 +391,28 @@ class Game {
     const loader = new GLTFLoader(manager);
 
     loader.load(`${import.meta.env.BASE_URL}assets/chicken.glb`, (gltf) => {
-      this.chicken = gltf.scene;
-      this.chicken.scale.set(1, 1, 1);
-      this.chicken.position.set(0, 0.5, 2);
-      this.chicken.rotation.y = Math.PI / 2;
-      this.chicken.traverse((node) => {
+      const model = gltf.scene;
+      model.rotation.y = Math.PI / 2;
+      model.traverse((node) => {
         if (node.isMesh) node.castShadow = true;
       });
+
+      // The GLB origin is offset from the visual body; re-center the model inside a
+      // group so the game position (lanes, collisions, lean pivot) matches what is drawn
+      const modelBounds = new THREE.Box3().setFromObject(model);
+      const modelCenter = modelBounds.getCenter(new THREE.Vector3());
+      model.position.x = -modelCenter.x;
+      model.position.z = -modelCenter.z;
+
+      this.chicken = new THREE.Group();
+      this.chicken.add(model);
+      this.chicken.position.set(0, 0.5, 2);
+
+      const bounds = new THREE.Box3().setFromObject(this.chicken);
+      this.chickenHalf = bounds
+        .getSize(new THREE.Vector3())
+        .multiplyScalar(0.5 * this.CONFIG.hitboxForgiveness);
+      this.chickenCenter = bounds.getCenter(new THREE.Vector3()).sub(this.chicken.position);
       this.scene.add(this.chicken);
     });
 
@@ -407,8 +423,10 @@ class Game {
         if (node.isMesh) node.castShadow = true;
       });
       const bounds = new THREE.Box3().setFromObject(this.carPrototype);
-      const size = bounds.getSize(new THREE.Vector3());
-      this.obstacleCollisionRadius = Math.max(size.x, size.z) / 2;
+      this.carHalf = bounds
+        .getSize(new THREE.Vector3())
+        .multiplyScalar(0.5 * this.CONFIG.hitboxForgiveness);
+      this.carCenter = bounds.getCenter(new THREE.Vector3());
     });
   }
 
@@ -540,7 +558,7 @@ class Game {
       // Lane change eases toward targetX; collisions still use the real position
       const step = Math.min(1, delta * 14);
       this.chicken.position.x += (this.targetX - this.chicken.position.x) * step;
-      this.chicken.rotation.y = Math.PI / 2 + (this.targetX - this.chicken.position.x) * 0.4;
+      this.chicken.rotation.y = (this.targetX - this.chicken.position.x) * 0.4;
 
       const bobSpeed = playing ? 9 : 3;
       const bobHeight = playing ? 0.1 : 0.04;
@@ -610,8 +628,18 @@ class Game {
           this.obstacles.splice(i, 1);
           continue;
         }
-        if (this.chicken && obs.position.distanceTo(this.chicken.position) < this.obstacleCollisionRadius) {
-          this.endGame();
+        if (this.chicken && this.chickenHalf && this.carHalf) {
+          const dx = Math.abs(
+            (obs.position.x + this.carCenter.x) -
+            (this.chicken.position.x + this.chickenCenter.x)
+          );
+          const dz = Math.abs(
+            (obs.position.z + this.carCenter.z) -
+            (this.chicken.position.z + this.chickenCenter.z)
+          );
+          if (dx < this.carHalf.x + this.chickenHalf.x && dz < this.carHalf.z + this.chickenHalf.z) {
+            this.endGame();
+          }
         }
       }
     }
@@ -665,5 +693,5 @@ window.addEventListener('DOMContentLoaded', () => {
   loader.textContent = 'Carregando... 0%';
   document.body.appendChild(loader);
 
-  new Game();
+  window.game = new Game();
 });
